@@ -1,11 +1,8 @@
 import MUIDataTable from "mui-datatables";
 import { FaEdit, FaRegAddressBook, FaTrash } from "react-icons/fa";
 import Navbar from "../components/Navbar";
-import ModalAgregarEditarCliente from "../components/ModalAgregarCliente";
 
 function ClientesPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   const clientes = [
     {
       id: 1,
@@ -170,10 +167,7 @@ function ClientesPage() {
               cliente.telefono,
               cliente.direccion,
               <div className="flex items-center gap-4" key={cliente.id}>
-                <button
-                  className="text-blue-600 hover:text-blue-800"
-                  onClick={() => handleEditCliente(cliente)}
-                >
+                <button className="text-blue-600 hover:text-blue-800">
                   <FaEdit className="text-xl" />
                 </button>
                 <button className="text-red-600 hover:text-red-800">
@@ -186,10 +180,6 @@ function ClientesPage() {
           />
         </div>
       </div>
-
-      <ModalAgregarEditarCliente
-        isOpen={isModalOpen}
-      />
     </>
   );
 }
