@@ -2,11 +2,11 @@
 import { useEffect, useState } from "react";
 
 const initialState = {
-  nombre: "",
-  cedula: "",
+  name: "",
+  ci: "",
   email: "",
-  telefono: "",
-  direccion: "",
+  phone: "",
+  address: "",
 };
 
 function ModalAgregarEditarCliente({
@@ -21,11 +21,11 @@ function ModalAgregarEditarCliente({
   useEffect(() => {
     if (cliente) {
       setForm({
-        nombre: cliente.nombre || "",
-        cedula: cliente.cedula || "",
+        name: cliente.name || "",
+        ci: cliente.ci || "",
         email: cliente.email || "",
-        telefono: cliente.telefono || "",
-        direccion: cliente.direccion || "",
+        phone: cliente.phone || "",
+        address: cliente.address || "",
       });
     } else {
       setForm(initialState);
@@ -43,7 +43,7 @@ function ModalAgregarEditarCliente({
   const handleSumbit = (e) => {
     e.preventDefault();
     if (cliente) {
-      onEdit(cliente.id, form);
+      onEdit(cliente.clientId, form);
     } else {
       onAdd(form);
     }
@@ -64,33 +64,33 @@ function ModalAgregarEditarCliente({
         <form className="flex flex-col gap-4" onSubmit={handleSumbit}>
           <div>
             <label
-              htmlFor="nombre"
+              htmlFor="name"
               className="block text-sm font-medium text-gray-700"
             >
               Nombre:
             </label>
             <input
               type="text"
-              id="nombre"
-              name="nombre"
-              value={form.nombre}
+              id="name"
+              name="name"
+              value={form.name}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
           <div>
             <label
-              htmlFor="cedula"
+              htmlFor="ci"
               className="block text-sm font-medium text-gray-700"
             >
               Cédula:
             </label>
             <input
               type="text"
-              id="cedula"
-              name="cedula"
+              id="ci"
+              name="ci"
               onChange={handleChange}
-              value={form.cedula}
+              value={form.ci}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
@@ -112,32 +112,32 @@ function ModalAgregarEditarCliente({
           </div>
           <div>
             <label
-              htmlFor="telefono"
+              htmlFor="phone"
               className="block text-sm font-medium text-gray-700"
             >
               Teléfono:
             </label>
             <input
               type="text"
-              id="telefono"
-              name="telefono"
-              value={form.telefono}
+              id="phone"
+              name="phone"
+              value={form.phone}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
           <div>
             <label
-              htmlFor="direccion"
+              htmlFor="address"
               className="block text-sm font-medium text-gray-700"
             >
               Dirección:
             </label>
             <input
               type="text"
-              id="direccion"
-              name="direccion"
-              value={form.direccion}
+              id="address"
+              name="address"
+              value={form.address}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />

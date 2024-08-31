@@ -4,103 +4,48 @@ import Navbar from "../components/Navbar";
 import { useState } from "react";
 import ModalAgregarEditarCliente from "../components/ModalAgregarCliente";
 import Swal from "sweetalert2";
-
-const clientesDB = [
-  {
-    id: 1,
-    nombre: "Cliente 1",
-    email: "cliente1@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 2,
-    nombre: "Cliente 2",
-    email: "cliente2@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 3,
-    nombre: "Cliente 1",
-    email: "cliente1@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 4,
-    nombre: "Cliente 2",
-    email: "cliente2@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 5,
-    nombre: "Cliente 1",
-    email: "cliente1@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 6,
-    nombre: "Cliente 2",
-    email: "cliente2@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 7,
-    nombre: "Cliente 1",
-    email: "cliente1@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 8,
-    nombre: "Cliente 2",
-    email: "cliente2@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 9,
-    nombre: "Cliente 1",
-    email: "cliente1@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-  {
-    id: 10,
-    nombre: "Cliente 2",
-    email: "cliente2@example.com",
-    telefono: "0982347297",
-    cedula: "1726249442",
-    direccion: "Quito",
-  },
-];
+import { clientsApi } from "../../api/clientsApi";
+import { useEffect } from "react";
 
 function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
-  const [clientes, setClientes] = useState(clientesDB);
+  const [clientes, setClientes] = useState([]);
+
+  useEffect(() => {
+    clientsApi.get().then((response) => {
+      setClientes(response.data);
+    });
+  }, []);
 
   const columns = [
-    "ID",
-    "Nombre",
-    "Cédula",
-    "Email",
-    "Teléfono",
-    "Dirección",
-    "Acciones",
+    {
+      name: "clientId",
+      label: "ID",
+    },
+    {
+      name: "name",
+      label: "Nombre",
+    },
+    {
+      name: "ci",
+      label: "Cédula",
+    },
+    {
+      name: "email",
+      label: "Email",
+    },
+    {
+      name: "phone",
+      label: "Teléfono",
+    },
+    {
+      name: "address",
+      label: "Dirección",
+    },
+    {
+      label: "Acciones",
+    },
   ];
 
   const options = {
@@ -164,16 +109,28 @@ function ClientesPage() {
     setIsModalOpen(false);
   };
 
-  const onAdd = (cliente) => {
-    //TODO: Implementar backend
+  const onAdd = async (cliente) => {
     console.log("Agregar cliente", cliente);
-    setClientes([...clientes, { id: clientes.length + 1, ...cliente }]);
+
+    try {
+      const { data: clienteCreado } = await clientsApi.post("/", cliente);
+      setClientes([...clientes, clienteCreado]);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const onEdit = (id, cliente) => {
-    //TODO: Implementar backend
-    console.log("Editar cliente", id, cliente);
-    setClientes(clientes.map((c) => (c.id === id ? { ...c, ...cliente } : c)));
+  const onEdit = async (id, cliente) => {
+    try {
+      const { data: clienteCreado } = await clientsApi.patch(`/${id}`, cliente);
+      setClientes(
+        clientes.map((c) =>
+          c.clientId === id ? { ...c, ...clienteCreado } : c
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleDeleteCliente = (id) => {
@@ -188,9 +145,18 @@ function ClientesPage() {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        //TODO: Implementar backend
-        setClientes(clientes.filter((cliente) => cliente.id !== id));
-        Swal.fire("Eliminado", "El cliente ha sido eliminado.", "success");
+        try {
+          clientsApi.delete(`/${id}`);
+          setClientes(clientes.filter((cliente) => cliente.clientId !== id));
+          Swal.fire("Eliminado", "El cliente ha sido eliminado.", "success");
+        } catch (error) {
+          console.error(error);
+          Swal.fire(
+            "Error",
+            "Ocurrió un error al intentar eliminar el cliente.",
+            "error"
+          );
+        }
       }
     });
   };
@@ -214,12 +180,12 @@ function ClientesPage() {
           <MUIDataTable
             title="Lista de Clientes"
             data={clientes.map((cliente) => [
-              cliente.id,
-              cliente.nombre,
-              cliente.cedula,
+              cliente.clientId,
+              cliente.name,
+              cliente.ci,
               cliente.email,
-              cliente.telefono,
-              cliente.direccion,
+              cliente.phone,
+              cliente.address,
               <div className="flex items-center gap-4" key={cliente.id}>
                 <button
                   className="text-blue-600 hover:text-blue-800"
@@ -229,7 +195,7 @@ function ClientesPage() {
                 </button>
                 <button
                   className="text-red-600 hover:text-red-800"
-                  onClick={() => handleDeleteCliente(cliente.id)}
+                  onClick={() => handleDeleteCliente(cliente.clientId)}
                 >
                   <FaTrash className="text-xl" />
                 </button>
