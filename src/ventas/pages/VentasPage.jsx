@@ -4,46 +4,35 @@ import { MdAdd, MdDelete, MdRemove } from "react-icons/md";
 import ModalAgregarEditarCliente from "../components/ModalAgregarCliente";
 import { FaRegAddressBook } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { clientsApi } from "../../api/clientsApi";
+import { productsApi } from "../../api/productsApi";
+import { ventasApi } from "../../api/ventasApi";
 
 function VentasPage() {
-  const [clientes, setClientes] = useState([
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      cedula: "1234567890",
-      email: "cliente1@example.com",
-      telefono: "0987654321",
-      direccion: "Dirección 1",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      cedula: "0987654321",
-      email: "cliente2@example.com",
-      telefono: "0123456789",
-      direccion: "Dirección 2",
-    },
-  ]);
-
-  const [productos, setProductos] = useState([
-    { id: 1, nombre: "Producto 1", precio: 10, stock: 20 },
-    { id: 2, nombre: "Producto 2", precio: 15, stock: 15 },
-    { id: 3, nombre: "Producto 3", precio: 10, stock: 20 },
-    { id: 4, nombre: "Producto 4", precio: 15, stock: 15 },
-    { id: 5, nombre: "Producto 5", precio: 10, stock: 20 },
-    { id: 6, nombre: "Producto 6", precio: 15, stock: 15 },
-  ]);
-
-  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState("");
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
-  const [productosFiltrados, setProductosFiltrados] = useState(productos);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [productos, setProductos] = useState([]);
+
+  useEffect(() => {
+    clientsApi.get().then((response) => {
+      setClientes(response.data);
+    });
+    productsApi.get().then((response) => {
+      setProductos(response.data);
+      setProductosFiltrados(response.data);
+    });
+  }, []);
 
   useEffect(() => {
     setProductosFiltrados(
       productos.filter((producto) =>
-        producto.nombre.toLowerCase().includes(terminoBusqueda.toLowerCase())
+        producto.product_name
+          .toLowerCase()
+          .includes(terminoBusqueda.toLowerCase())
       )
     );
   }, [productos, terminoBusqueda]);
@@ -52,26 +41,32 @@ function VentasPage() {
     if (producto.stock <= 0) return;
 
     const productoExistente = productosSeleccionados.find(
-      (p) => p.id === producto.id
+      (p) => p.product_id === producto.product_id
     );
 
     if (productoExistente) {
       if (producto.stock > 0) {
         setProductosSeleccionados((prev) =>
           prev.map((p) =>
-            p.id === producto.id ? { ...p, cantidad: p.cantidad + 1 } : p
+            p.product_id === producto.product_id
+              ? { ...p, cantidad: p.cantidad + 1 }
+              : p
           )
         );
         setProductos((prev) =>
           prev.map((p) =>
-            p.id === producto.id ? { ...p, stock: p.stock - 1 } : p
+            p.product_id === producto.product_id
+              ? { ...p, stock: p.stock - 1 }
+              : p
           )
         );
       }
     } else {
       setProductos((prev) =>
         prev.map((p) =>
-          p.id === producto.id ? { ...p, stock: p.stock - 1 } : p
+          p.product_id === producto.product_id
+            ? { ...p, stock: p.stock - 1 }
+            : p
         )
       );
       setProductosSeleccionados((prev) => [
@@ -84,7 +79,7 @@ function VentasPage() {
   const actualizarCantidadProducto = (id, cantidad) => {
     setProductosSeleccionados((prev) =>
       prev.map((p) =>
-        p.id === id
+        p.product_id === id
           ? {
               ...p,
               cantidad: p.cantidad + cantidad,
@@ -95,24 +90,30 @@ function VentasPage() {
     );
 
     setProductos((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, stock: p.stock - cantidad } : p))
+      prev.map((p) =>
+        p.product_id === id ? { ...p, stock: p.stock - cantidad } : p
+      )
     );
   };
 
   const disminuirCantidadProducto = (id) => {
-    const productoExistente = productosSeleccionados.find((p) => p.id === id);
+    const productoExistente = productosSeleccionados.find(
+      (p) => p.product_id === id
+    );
 
     if (productoExistente.cantidad > 1) {
       setProductosSeleccionados((prev) =>
         prev.map((p) =>
-          p.id === id
+          p.product_id === id
             ? { ...p, cantidad: p.cantidad - 1, stock: p.stock + 1 }
             : p
         )
       );
 
       setProductos((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, stock: p.stock + 1 } : p))
+        prev.map((p) =>
+          p.product_id === id ? { ...p, stock: p.stock + 1 } : p
+        )
       );
     } else {
       eliminarProducto(id);
@@ -120,40 +121,80 @@ function VentasPage() {
   };
 
   const eliminarProducto = (id) => {
-    const productoAEliminar = productosSeleccionados.find((p) => p.id === id);
+    const productoAEliminar = productosSeleccionados.find(
+      (p) => p.product_id === id
+    );
 
     setProductos((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, stock: p.stock + productoAEliminar.cantidad } : p
+        p.product_id === id
+          ? { ...p, stock: p.stock + productoAEliminar.cantidad }
+          : p
       )
     );
 
-    setProductosSeleccionados((prev) => prev.filter((p) => p.id !== id));
+    setProductosSeleccionados((prev) =>
+      prev.filter((p) => p.product_id !== id)
+    );
   };
 
   const calcularTotal = () => {
-    return productosSeleccionados.reduce(
-      (total, producto) => total + producto.precio * producto.cantidad,
+    const total = productosSeleccionados.reduce(
+      (total, producto) => total + producto.price * producto.cantidad,
       0
     );
+    return parseFloat(total.toFixed(2));
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
 
-  const onAdd = (cliente) => {
-    //TODO: Implementar backend
-    console.log("Agregar cliente", cliente);
-    setClientes([...clientes, { id: clientes.length + 1, ...cliente }]);
+  const onAdd = async (cliente) => {
+    try {
+      const { data: clienteCreado } = await clientsApi.post("/", cliente);
+      setClientes([...clientes, clienteCreado]);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleTerminarVenta = () => {
-    //TODO: Implementar backend
-    Swal.fire({
-      title: "Venta Finalizada con Éxito",
-      icon: "success",
-    });
+  const handleTerminarVenta = async () => {
+    if (!clienteSeleccionado) {
+      Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un cliente para finalizar la venta",
+        icon: "error",
+      });
+      return;
+    }
+
+    const venta = {
+      clientId: clienteSeleccionado.clientId,
+      items: productosSeleccionados.map((producto) => ({
+        productId: producto.product_id,
+        quantity: producto.cantidad,
+        price: producto.price,
+      })),
+    };
+
+    try {
+      const { data: ventaDB } = await ventasApi.post("/", venta);
+      Swal.fire({
+        title: `Venta #${ventaDB.id} Finalizada con Éxito`,
+        icon: "success",
+      }).then(() => {
+        setClienteSeleccionado(null);
+        setProductosSeleccionados([]);
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        title: "Error",
+        text: "Ocurrió un error al finalizar la venta",
+        icon: "error",
+      });
+    }
   };
 
   return (
@@ -180,15 +221,16 @@ function VentasPage() {
               onChange={(e) =>
                 setClienteSeleccionado(
                   clientes.find(
-                    (cliente) => cliente.id === parseInt(e.target.value)
+                    (cliente) => cliente.clientId === parseInt(e.target.value)
                   )
                 )
               }
+              value={clienteSeleccionado ? clienteSeleccionado.clientId : ""}
             >
               <option value="">Seleccione un cliente</option>
               {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nombre}
+                <option key={cliente.clientId} value={cliente.clientId}>
+                  {cliente.name}
                 </option>
               ))}
             </select>
@@ -219,7 +261,7 @@ function VentasPage() {
               ) : (
                 productosFiltrados.map((producto) => (
                   <div
-                    key={producto.id}
+                    key={producto.product_id}
                     className={`p-4 rounded shadow cursor-pointer ${
                       producto.stock <= 0
                         ? "bg-red-200"
@@ -227,8 +269,10 @@ function VentasPage() {
                     }`}
                     onClick={() => seleccionarProducto(producto)}
                   >
-                    <h3 className="text-lg font-bold">{producto.nombre}</h3>
-                    <p>Precio: ${producto.precio}</p>
+                    <h3 className="text-lg font-bold">
+                      {producto.product_name}
+                    </h3>
+                    <p>Precio: ${producto.price}</p>
                     <p>
                       Stock:{" "}
                       {producto.stock <= 0 ? "Sin stock" : producto.stock}
@@ -249,11 +293,11 @@ function VentasPage() {
                 <h3 className="text-xl font-bold">Cliente Seleccionado</h3>
                 <p>
                   <span className="font-semibold">Nombre:</span>{" "}
-                  {clienteSeleccionado.nombre}
+                  {clienteSeleccionado.name}
                 </p>
                 <p>
                   <span className="font-semibold">Cédula:</span>{" "}
-                  {clienteSeleccionado.cedula}
+                  {clienteSeleccionado.ci}
                 </p>
               </div>
               <div>
@@ -263,11 +307,11 @@ function VentasPage() {
                 </p>
                 <p>
                   <span className="font-semibold">Teléfono:</span>{" "}
-                  {clienteSeleccionado.telefono}
+                  {clienteSeleccionado.phone}
                 </p>
                 <p>
                   <span className="font-semibold">Dirección:</span>{" "}
-                  {clienteSeleccionado.direccion}
+                  {clienteSeleccionado.address}
                 </p>
               </div>
             </div>
@@ -286,25 +330,30 @@ function VentasPage() {
                 className="border-b py-2 flex justify-between items-center"
               >
                 <span>
-                  {producto.nombre} - ${producto.precio} x {producto.cantidad}
+                  {producto.product_name} - ${producto.price} x{" "}
+                  {producto.cantidad}
                 </span>
                 <div className="flex justify-between gap-2">
                   <button
                     className="px-2 bg-blue-500 text-white rounded"
-                    onClick={() => actualizarCantidadProducto(producto.id, 1)}
+                    onClick={() =>
+                      actualizarCantidadProducto(producto.product_id, 1)
+                    }
                     disabled={producto.stock === 0}
                   >
                     <MdAdd />
                   </button>
                   <button
                     className="px-2 bg-red-500 text-white rounded"
-                    onClick={() => disminuirCantidadProducto(producto.id)}
+                    onClick={() =>
+                      disminuirCantidadProducto(producto.product_id)
+                    }
                   >
                     <MdRemove />
                   </button>
                   <button
                     className="px-2 py-1 bg-gray-500 text-white rounded"
-                    onClick={() => eliminarProducto(producto.id)}
+                    onClick={() => eliminarProducto(producto.product_id)}
                   >
                     <MdDelete />
                   </button>
