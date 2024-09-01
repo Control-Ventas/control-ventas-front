@@ -9,7 +9,7 @@ import { productsApi } from "../../../api/productsApi";
 function InventarioTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [producto, setProducto] = useState({});
-    const [productos, setProductos] = useState(products);
+    const [productos, setProductos] = useState([]);
 
     useEffect(() => {
         productsApi.get().then((response) => {
