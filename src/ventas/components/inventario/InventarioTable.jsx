@@ -6,14 +6,6 @@ import ProductFormModal from "./ProductFormModal";
 import Swal from "sweetalert2";
 import { productsApi } from "../../../api/productsApi";
 
-const products = [
-    { product_id: 1, product_name: "Producto 1", description: "Si", price: 100, stock: 10 },
-    { id: 2, name: "Producto 2", price: 200, stock: 20 },
-    { id: 3, name: "Producto 3", price: 300, stock: 30 },
-    { id: 4, name: "Producto 4", price: 400, stock: 40 },
-    { id: 5, name: "Producto 5", price: 500, stock: 50 },
-];
-
 function InventarioTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [producto, setProducto] = useState({});
