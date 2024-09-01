@@ -4,6 +4,7 @@ import CajeroMainPage from "../ventas/pages/CajeroMainPage";
 import { useAuthStore } from "../hooks/useAuthStore";
 import ClientesPage from "../ventas/pages/ClientesPage";
 import InventarioPage from "../ventas/pages/InventarioPage";
+import VentasPage from "../ventas/pages/VentasPage";
 
 function AppRouter() {
   const { status } = useAuthStore();
@@ -20,6 +21,7 @@ function AppRouter() {
           <Route path="/" element={<CajeroMainPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/inventario" element={<InventarioPage />} />
+          <Route path="/ventas" element={<VentasPage />} />
           <Route path="/*" element={<Navigate to="/" />} />
         </>
       )}

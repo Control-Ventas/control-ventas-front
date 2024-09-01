@@ -1,100 +1,51 @@
 import MUIDataTable from "mui-datatables";
 import { FaEdit, FaRegAddressBook, FaTrash } from "react-icons/fa";
 import Navbar from "../components/Navbar";
+import { useState } from "react";
+import ModalAgregarEditarCliente from "../components/ModalAgregarCliente";
+import Swal from "sweetalert2";
+import { clientsApi } from "../../api/clientsApi";
+import { useEffect } from "react";
 
 function ClientesPage() {
-  const clientes = [
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      email: "cliente1@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      email: "cliente2@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      email: "cliente1@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      email: "cliente2@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      email: "cliente1@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      email: "cliente2@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      email: "cliente1@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      email: "cliente2@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 1,
-      nombre: "Cliente 1",
-      email: "cliente1@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    {
-      id: 2,
-      nombre: "Cliente 2",
-      email: "cliente2@example.com",
-      telefono: "0982347297",
-      cedula: "1726249442",
-      direccion: "Quito",
-    },
-    // Agrega más clientes según sea necesario
-  ];
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCliente, setSelectedCliente] = useState(null);
+  const [clientes, setClientes] = useState([]);
+
+  useEffect(() => {
+    clientsApi.get().then((response) => {
+      setClientes(response.data);
+    });
+  }, []);
 
   const columns = [
-    "ID",
-    "Nombre",
-    "Cédula",
-    "Email",
-    "Teléfono",
-    "Dirección",
-    "Acciones",
+    {
+      name: "clientId",
+      label: "ID",
+    },
+    {
+      name: "name",
+      label: "Nombre",
+    },
+    {
+      name: "ci",
+      label: "Cédula",
+    },
+    {
+      name: "email",
+      label: "Email",
+    },
+    {
+      name: "phone",
+      label: "Teléfono",
+    },
+    {
+      name: "address",
+      label: "Dirección",
+    },
+    {
+      label: "Acciones",
+    },
   ];
 
   const options = {
@@ -144,13 +95,82 @@ function ClientesPage() {
     }),
   };
 
+  const handleAddCliente = () => {
+    setSelectedCliente(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditCliente = (cliente) => {
+    setSelectedCliente(cliente);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const onAdd = async (cliente) => {
+    console.log("Agregar cliente", cliente);
+
+    try {
+      const { data: clienteCreado } = await clientsApi.post("/", cliente);
+      setClientes([...clientes, clienteCreado]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const onEdit = async (id, cliente) => {
+    try {
+      const { data: clienteCreado } = await clientsApi.patch(`/${id}`, cliente);
+      setClientes(
+        clientes.map((c) =>
+          c.clientId === id ? { ...c, ...clienteCreado } : c
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteCliente = (id) => {
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "No podrás revertir esto",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminarlo",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          clientsApi.delete(`/${id}`);
+          setClientes(clientes.filter((cliente) => cliente.clientId !== id));
+          Swal.fire("Eliminado", "El cliente ha sido eliminado.", "success");
+        } catch (error) {
+          console.error(error);
+          Swal.fire(
+            "Error",
+            "Ocurrió un error al intentar eliminar el cliente.",
+            "error"
+          );
+        }
+      }
+    });
+  };
+
   return (
     <>
       <Navbar />
       <div className="p-4 mt-5">
         <div className="flex justify-between items-center mx-5">
           <h1 className="text-3xl font-bold mb-4">Gestión de Clientes</h1>
-          <button className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button
+            className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={handleAddCliente}
+          >
             <FaRegAddressBook className="text-xl" />
             Agregar Cliente
           </button>
@@ -160,17 +180,23 @@ function ClientesPage() {
           <MUIDataTable
             title="Lista de Clientes"
             data={clientes.map((cliente) => [
-              cliente.id,
-              cliente.nombre,
-              cliente.cedula,
+              cliente.clientId,
+              cliente.name,
+              cliente.ci,
               cliente.email,
-              cliente.telefono,
-              cliente.direccion,
+              cliente.phone,
+              cliente.address,
               <div className="flex items-center gap-4" key={cliente.id}>
-                <button className="text-blue-600 hover:text-blue-800">
+                <button
+                  className="text-blue-600 hover:text-blue-800"
+                  onClick={() => handleEditCliente(cliente)}
+                >
                   <FaEdit className="text-xl" />
                 </button>
-                <button className="text-red-600 hover:text-red-800">
+                <button
+                  className="text-red-600 hover:text-red-800"
+                  onClick={() => handleDeleteCliente(cliente.clientId)}
+                >
                   <FaTrash className="text-xl" />
                 </button>
               </div>,
@@ -179,6 +205,13 @@ function ClientesPage() {
             options={options}
           />
         </div>
+        <ModalAgregarEditarCliente
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          cliente={selectedCliente}
+          onAdd={onAdd}
+          onEdit={onEdit}
+        />
       </div>
     </>
   );

@@ -41,7 +41,12 @@ function CajeroMainPage() {
             </h2>
             <p className="text-gray-600">Controla y organiza tu inventario.</p>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center cursor-pointer hover:bg-blue-100">
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center cursor-pointer hover:bg-blue-100"
+            onClick={() => {
+              navigate("/ventas");
+            }}
+          >
             <FaCashRegister className="text-blue-600 text-6xl mb-4" />
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               Ventas
