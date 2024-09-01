@@ -1,22 +1,21 @@
 import MUIDataTable from "mui-datatables";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { MdAddBusiness } from "react-icons/md";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductFormModal from "./ProductFormModal";
 import Swal from "sweetalert2";
-
-const products = [
-    { id: 1, name: "Producto 1", description: "Si", price: 100, stock: 10 },
-    { id: 2, name: "Producto 2", price: 200, stock: 20 },
-    { id: 3, name: "Producto 3", price: 300, stock: 30 },
-    { id: 4, name: "Producto 4", price: 400, stock: 40 },
-    { id: 5, name: "Producto 5", price: 500, stock: 50 },
-];
+import { productsApi } from "../../../api/productsApi";
 
 function InventarioTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [producto, setProducto] = useState({});
-    const [productos, setProductos] = useState(products);
+    const [productos, setProductos] = useState([]);
+
+    useEffect(() => {
+        productsApi.get().then((response) => {
+            setProductos(response.data);
+        })
+    }, [])
 
     const handleOpenModal = (productEdit) => {
         setProducto(productEdit);
@@ -28,8 +27,37 @@ function InventarioTable() {
         setIsModalOpen(false);
     };
 
-    const handleAddProduct = (newProduct) => {
-        console.log('Nuevo producto agregado:', newProduct);
+    const handleSubmit = async (newProduct) => {
+        if (newProduct.product_id == 0) {
+            newProduct = {
+                product_name: newProduct.product_name,
+                description: newProduct.description,
+                price: newProduct.price,
+                stock: newProduct.stock
+            }
+            const { data: productoCreado } = await productsApi.post('/', newProduct);
+            setProductos([...productos, productoCreado]);
+            Swal.fire({
+                title: "Producto agregado con exito",
+                text: `El producto ${newProduct.product_name} ha sido agregado con exito`,
+                icon: "success"
+            });
+        } else {
+            const { data: productoEditado } = await productsApi.patch(`/${newProduct.product_id}`,
+                {
+                    product_name: newProduct.product_name,
+                    description: newProduct.description,
+                    price: newProduct.price,
+                    stock: newProduct.stock
+                });
+            setProductos(productos.map((producto) =>
+                producto.product_id === newProduct.product_id ? productoEditado : producto));
+            Swal.fire({
+                title: "Producto editado con exito",
+                text: `El producto ${newProduct.product_name} ha sido editado con exito`,
+                icon: "success"
+            });
+        }
         // Aquí puedes agregar la lógica para manejar el nuevo producto
     };
 
@@ -45,8 +73,8 @@ function InventarioTable() {
             cancelButtonText: "Cancelar",
         }).then((result) => {
             if (result.isConfirmed) {
-                //TODO: Implementar backend
-                setProductos(productos.filter((producto) => producto.id !== id));
+                setProductos(productos.filter((producto) => producto.product_id !== id));
+                productsApi.delete(`/${id}`);
                 Swal.fire("Eliminado", "El producto ha sido eliminado.", "success");
             }
         });
@@ -160,18 +188,18 @@ function InventarioTable() {
                 <MUIDataTable
                     title="Lista de Productos"
                     data={productos.map((product) => [
-                        product.id,
-                        product.name,
+                        product.product_id,
+                        product.product_name,
                         product.description || "N/A",
                         `$${product.price}`,
                         product.stock,
-                        <div className="flex items-center gap-4" key={product.id}>
+                        <div className="flex items-center gap-4" key={product.product_id}>
                             <button className="text-blue-600 hover:text-blue-800"
                                 onClick={() => handleOpenModal(product)}>
                                 <FaEdit className="text-xl" />
                             </button>
                             <button className="text-red-600 hover:text-red-800"
-                            onClick={() => handleDeleteProducto(product.id)}>
+                                onClick={() => handleDeleteProducto(product.product_id)}>
                                 <FaTrash className="text-xl" />
                             </button>
                         </div>,
@@ -183,7 +211,7 @@ function InventarioTable() {
             {isModalOpen && (<ProductFormModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
-                onSubmit={handleAddProduct}
+                onSubmit={handleSubmit}
                 product={producto}
             />)}
         </div>
