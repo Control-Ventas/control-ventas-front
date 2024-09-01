@@ -1,21 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaTimes } from "react-icons/fa";
 
-function ProductFormModal({ isOpen, onClose, onSubmit }) {
+function ProductFormModal({ isOpen, onClose, onSubmit, product }) {
     const dialogRef = useRef(null);
 
-    useEffect(() => {
-        if (isOpen) {
-            dialogRef.current.showModal();
-        } else {
-            dialogRef.current.close();
-        }
-    }, [isOpen]);
-
+    const [productId, setProductId] = useState(0);
     const [productName, setProductName] = useState('');
     const [productDescription, setProductDescription] = useState('');
     const [productPrice, setProductPrice] = useState('');
     const [productStock, setProductStock] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            dialogRef.current.showModal();
+            setProductId(product.id || 0);
+            setProductName(product.name || '');
+            setProductDescription(product.description || '');
+            setProductPrice(product.price || '');
+            setProductStock(product.stock || '');
+        } else {
+            dialogRef.current.close();
+        }
+    }, [isOpen]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -35,7 +41,9 @@ function ProductFormModal({ isOpen, onClose, onSubmit }) {
             className="rounded-lg shadow-lg w-11/12 md:w-1/2 p-5"
         >
             <div className='flex justify-between'>
-                <h2 className="text-2xl font-semibold mb-4">Agregar Nuevo Producto</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                    {product.id ? 'Editar Producto' : 'Agregar Nuevo Producto'}
+                </h2>
                 <button
                     type="button"
                     className="text-gray-400 hover:text-gray-600 top-0"
@@ -101,15 +109,16 @@ function ProductFormModal({ isOpen, onClose, onSubmit }) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                        className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className={`py-2 px-4 text-white rounded-md
+                        ${product.id ? 'hover:bg-green-700 bg-green-600' : 'hover:bg-blue-700 bg-blue-600'}`}
                     >
-                        Guardar Producto
+                        {product.id ? 'Editar Producto' : 'Guardar Producto'}
                     </button>
                 </div>
             </form>
